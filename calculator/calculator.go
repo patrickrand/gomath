@@ -1,9 +1,9 @@
 package calculator
 
-import "fmt"
+import "errors"
 
 type Calculator interface {
-	Calculate() (float64, error)
+	Calculate(expr string) (float64, error)
 }
 
 type notation string
@@ -14,11 +14,13 @@ const (
 	POSTFIX notation = "postfix"
 )
 
-func New(expr string, n notation) (Calculator, error) {
+var ErrNotationNotImplemented = errors.New("notation not implemented")
+
+func New(n notation) (Calculator, error) {
 	switch n {
 	case POSTFIX:
-		return parsePostfix(expr)
+		return &postfix{}, nil
 	default:
-		return nil, fmt.Errorf("whoops! %q notation is not implemented", string(n))
+		return nil, ErrNotationNotImplemented
 	}
 }
