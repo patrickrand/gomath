@@ -21,7 +21,7 @@ func (pf *postfix) Calculate(expr string) (float64, error) {
 			continue
 		}
 
-		op, ok := Operator(token[0])
+		op, ok := Operator(token)
 		if !ok {
 			// attempt to parse float from token and push its value onto stack
 			val, err := strconv.ParseFloat(token, 0)
