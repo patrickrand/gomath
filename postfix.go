@@ -1,4 +1,4 @@
-package calculator
+package main
 
 import (
 	"errors"
@@ -21,25 +21,36 @@ func (pf *postfix) Calculate(expr string) (float64, error) {
 			continue
 		}
 
-		op, ok := Operator(token)
-		if !ok {
-			// attempt to parse float from token and push its value onto stack
-			val, err := strconv.ParseFloat(token, 0)
-			if err != nil {
-				return 0, ErrInvalidPostfixToken
+		top := len(stack)
+
+		if op, ok := Operator(token); ok {
+			if top < 2 {
+				return 0, ErrInvalidStackOrdering
 			}
-			stack = append(stack, val)
+
+			lhs, rhs := stack[top-2], stack[top-1]
+			stack, top = stack[:top-1], top-1
+			stack[top-1] = op(lhs, rhs)
 			continue
 		}
 
-		top := len(stack)
-		if top < 2 {
-			return 0, ErrInvalidStackOrdering
+		if fn, ok := Function(token); ok {
+			if top < 1 {
+				return 0, ErrInvalidStackOrdering
+			}
+
+			stack[top-1] = fn(stack[top-1])
+			continue
 		}
 
-		lhs, rhs := stack[top-2], stack[top-1]
-		stack = stack[:top-1]
-		stack[top-2] = op(lhs, rhs)
+		// attempt to parse float from token and push its value onto stack
+		val, err := strconv.ParseFloat(token, 0)
+		if err != nil {
+			return 0, ErrInvalidPostfixToken
+		}
+		stack = append(stack, val)
+		continue
+
 	}
 
 	if len(stack) != 1 {

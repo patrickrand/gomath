@@ -1,4 +1,4 @@
-package calculator
+package main
 
 import "errors"
 
@@ -16,7 +16,7 @@ const (
 
 var ErrNotationNotImplemented = errors.New("notation not implemented")
 
-func New(n notation) (Calculator, error) {
+func NewCalculator(n notation) (Calculator, error) {
 	switch n {
 	case POSTFIX:
 		return &postfix{}, nil

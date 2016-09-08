@@ -1,4 +1,4 @@
-package calculator
+package main
 
 import "math"
 
@@ -14,7 +14,7 @@ func Operator(token string) (func(a, b float64) float64, bool) {
 		return func(a, b float64) float64 { return a * b }, true // multiplication
 	case "/":
 		return func(a, b float64) float64 { return a / b }, true // division
-	case "^":
+	case "pow":
 		return math.Pow, true // exponentation
 	default:
 		return func(a, b float64) float64 { return 0 }, false // noop

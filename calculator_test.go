@@ -1,8 +1,8 @@
-package calculator
+package main
 
 import "testing"
 
-func TestNew(t *testing.T) {
+func TestNewCalculator(t *testing.T) {
 	testCases := []struct {
 		notation
 		Calculator
@@ -15,7 +15,7 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		calc, err := New(tc.notation)
+		calc, err := NewCalculator(tc.notation)
 		if expected := tc.Calculator; expected == nil && calc != expected {
 			t.Errorf("expected nil Calculator for notation %q", string(tc.notation))
 		}

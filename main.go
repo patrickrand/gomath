@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
-	"github.com/patrickrand/gomath/calculator"
 )
 
 var (
@@ -23,14 +21,14 @@ func main() {
 		exit("--postfix flag is required, as it is the only notation currently supported")
 	}
 
-	calc, err := calculator.New(calculator.POSTFIX)
+	postfix, err := NewCalculator(POSTFIX)
 	if err != nil {
 		exit(err)
 	}
 
 	expr := os.Args[len(os.Args)-1] // expression string must be the final argument
 
-	result, err := calc.Calculate(expr)
+	result, err := postfix.Calculate(expr)
 	if err != nil {
 		exit(err)
 	}
