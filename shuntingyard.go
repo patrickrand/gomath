@@ -1,21 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 func shuntingYard(infix string) (postfix string, err error) {
-	var output []byte
+	var queue []byte
+	var stack []string
 
 	defer func() {
-		postfix = string(output)
+		postfix = string(queue)
 	}()
 
 	tokens := strings.Split(infix, " ")
 	for _, tok := range tokens {
 		if isNumber(tok) {
-			output = append(output, []byte(tok+" ")...)
+			queue = append(queue, []byte(tok+" ")...)
 			continue
 		}
 
@@ -25,20 +27,36 @@ func shuntingYard(infix string) (postfix string, err error) {
 		}
 
 		if isFunction(tok) {
-			// stuff
+			stack = append([]string{tok}, stack...)
 			continue
 		}
 
 		if isComma(tok) {
-			// stuff
+			var i int
+			var hasLeftParenths bool
+			for i = 0; i < len(stack); i++ {
+				elem := stack[i]
+				if isLeftParenths(elem) {
+					hasLeftParenths = true
+					break
+				}
+				queue = append(queue, []byte(elem+" ")...)
+			}
+			stack = stack[i:]
+
+			if !hasLeftParenths {
+				return postfix, fmt.Errorf("expected left parenths in stack: %#v", stack)
+			}
 			continue
 		}
 
 		if isLeftParenths(tok) {
+			stack = append([]string{tok}, stack...)
 			continue
 		}
 
 		if isRightParenths(tok) {
+			// stuff
 			continue
 		}
 
