@@ -11,7 +11,7 @@ func TestConvertInfixToPostfix(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		got, err := ConvertPostfixToInfix(tc.infix)
+		got, err := ConvertInfixToPostfix(tc.infix)
 		if tc.error != err {
 			t.Errorf("given: %q, expected error: %v, got error: %v", tc.infix, tc.error, err)
 		}

@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	postfixFlag = flag.Bool("postfix", false, "Evaluate expression using postfix notation.")
+	notationType = InfixNotation
+	infixFlag    = flag.Bool("infix", true, "Evaluate expression using infix notation.")
+	postfixFlag  = flag.Bool("postfix", false, "Evaluate expression using postfix notation.")
 )
 
 func main() {
@@ -17,18 +19,22 @@ func main() {
 
 	flag.Parse()
 
-	if !*postfixFlag {
-		exit("--postfix flag is required, as it is the only notation currently supported")
+	if *postfixFlag == *infixFlag {
+		exit("error: --postfix flag and --infix flag cannot have the same value")
 	}
 
-	postfix, err := NewCalculator(POSTFIX)
+	if *postfixFlag {
+		notationType = PostfixNotation
+	}
+
+	calc, err := NewCalculator(notationType)
 	if err != nil {
 		exit(err)
 	}
 
 	expr := os.Args[len(os.Args)-1] // expression string must be the final argument
 
-	result, err := postfix.Calculate(expr)
+	result, err := calc.Calculate(expr)
 	if err != nil {
 		exit(err)
 	}

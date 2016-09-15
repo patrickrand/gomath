@@ -9,9 +9,9 @@ func TestNewCalculator(t *testing.T) {
 		error
 	}{
 		{notation: notation("invalid"), error: ErrNotationNotImplemented},
-		{notation: PREFIX, error: ErrNotationNotImplemented},
-		{notation: INFIX, error: ErrNotationNotImplemented},
-		{notation: POSTFIX, Calculator: &postfix{}},
+		{notation: PrefixNotation, error: ErrNotationNotImplemented},
+		{notation: InfixNotation, Calculator: &infix{}},
+		{notation: PostfixNotation, Calculator: &postfix{}},
 	}
 
 	for _, tc := range testCases {

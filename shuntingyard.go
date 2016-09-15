@@ -1,14 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"strconv"
 	"strings"
 	"text/scanner"
 )
 
-// ConvertPostfixToInfix returns the postfix equivalent of the given infix expression.
-func ConvertPostfixToInfix(infix string) (postfix string, err error) {
+var (
+	ErrMissingLeftParenths = errors.New("missing left parenths in expression stack")
+	ErrExtraParenths       = errors.New("extra parenths token in expression stack")
+)
+
+// ConvertInfixToPostfix returns the postfix equivalent of the given infix expression.
+func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 	scan := new(scanner.Scanner).Init(strings.NewReader(infix))
 	scan.Mode = scanner.ScanIdents | scanner.ScanInts | scanner.ScanFloats
 
@@ -54,7 +59,7 @@ func ConvertPostfixToInfix(infix string) (postfix string, err error) {
 			}
 
 			if i == -1 {
-				return postfix, fmt.Errorf("expected left parenths in stack: %#v", stack)
+				return postfix, ErrMissingLeftParenths
 			}
 
 			stack = stack[:i+1]
@@ -77,7 +82,7 @@ func ConvertPostfixToInfix(infix string) (postfix string, err error) {
 			}
 
 			if i == -1 {
-				return postfix, fmt.Errorf("expected left parenths in stack %#v", stack)
+				return postfix, ErrMissingLeftParenths
 			}
 
 			stack = stack[:i]
@@ -97,7 +102,7 @@ func ConvertPostfixToInfix(infix string) (postfix string, err error) {
 	for len(stack) != 0 {
 		elem := stack[len(stack)-1]
 		if elem == "(" || elem == ")" {
-			return postfix, fmt.Errorf("unexpected parenths token remaining on stack %#v", stack)
+			return postfix, ErrExtraParenths
 		}
 		stack = stack[:1]
 		queue = append(queue, []byte(elem+" ")...)
