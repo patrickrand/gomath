@@ -7,8 +7,7 @@ func TestConvertInfixToPostfix(t *testing.T) {
 		infix, postfix string
 		error
 	}{
-		{"3 +4 *sin(12)", "3 4 +", nil},
-		//	{"( 3 + 4 ) * 12 - 5", "3 4 + 12 * 5 -", nil},
+		{"3 +4 *sin(12)", "3 4 12 sin * +", nil},
 	}
 
 	for _, tc := range cases {

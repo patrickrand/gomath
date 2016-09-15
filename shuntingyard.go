@@ -18,7 +18,8 @@ func ConvertPostfixToInfix(infix string) (postfix string, err error) {
 
 	for tok := scan.Scan(); tok != scanner.EOF; tok = scan.Scan() {
 		token := scan.TokenText()
-		if isNumber(token) {
+
+		if _, err := strconv.ParseFloat(token, 0); err == nil {
 			queue = append(queue, []byte(token+" ")...)
 			continue
 		}
