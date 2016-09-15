@@ -104,7 +104,7 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 		if elem == "(" || elem == ")" {
 			return postfix, ErrExtraParenths
 		}
-		stack = stack[:1]
+		stack = stack[:len(stack)-1]
 		queue = append(queue, []byte(elem+" ")...)
 	}
 

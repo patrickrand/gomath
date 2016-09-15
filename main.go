@@ -35,7 +35,7 @@ func main() {
 		exit(err)
 	}
 
-	fmt.Printf("%v = %v\n", expr, result)
+	fmt.Println(result)
 }
 
 func exit(v ...interface{}) {
