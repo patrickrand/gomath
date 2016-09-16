@@ -13,6 +13,46 @@ var (
 	ErrExtraParenths       = errors.New("extra parenths token in expression stack")
 )
 
+type TokenType int
+
+const (
+	NumberToken TokenType = iota
+	OperatorToken
+	FunctionToken
+	CommaToken
+	LeftParenthsToken
+	RightParenthsToken
+	ErrorToken
+)
+
+func GetTokenType(token string) TokenType {
+	if _, err := strconv.ParseFloat(token, 0); err == nil {
+		return NumberToken
+	}
+
+	if _, ok := Operator(token); ok {
+		return OperatorToken
+	}
+
+	if _, ok := Function(token); ok {
+		return FunctionToken
+	}
+
+	if token == "," {
+		return CommaToken
+	}
+
+	if token == "(" {
+		return LeftParenthsToken
+	}
+
+	if token == ")" {
+		return RightParenthsToken
+	}
+
+	return ErrorToken
+}
+
 // ConvertInfixToPostfix returns the postfix equivalent of the given infix expression.
 func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 	scan := new(scanner.Scanner).Init(strings.NewReader(infix))
@@ -29,14 +69,11 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 	for tok := scan.Scan(); tok != scanner.EOF; tok = scan.Scan() {
 		token := scan.TokenText()
 
-		if _, err := strconv.ParseFloat(token, 0); err == nil {
+		switch GetTokenType(token) {
+		case NumberToken:
 			sb.WriteString(token)
 			sb.WriteByte(' ')
-			prev = token
-			continue
-		}
-
-		if _, ok := Operator(token); ok {
+		case OperatorToken:
 			if len(stack) != 0 {
 				if token == "-" {
 					next := scan.Scan()
@@ -66,13 +103,6 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 					sb.WriteByte(' ')
 					continue
 				}
-				o1, o2 := token, stack[len(stack)-1]
-				if (isLeftAssociativeOperator(o1) && precedence(o1) <= precedence(o2)) ||
-					(isRightAssociativeOperator(o1) && precedence(o1) < precedence(o2)) {
-					stack = stack[:len(stack)-1]
-					sb.WriteString(o2)
-					sb.WriteByte(' ')
-				}
 			} else if token == "-" {
 				tok = scan.Scan()
 				if tok == scanner.EOF {
@@ -88,19 +118,10 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 				sb.WriteByte(' ')
 				continue
 			}
-
-			prev = token
 			stack = append(stack, token)
-			continue
-		}
-
-		if _, ok := Function(token); ok {
-			prev = token
+		case FunctionToken:
 			stack = append(stack, token)
-			continue
-		}
-
-		if token == "," {
+		case CommaToken:
 			var i int
 			for i = len(stack) - 1; i >= 0; i-- {
 				elem := stack[i]
@@ -116,17 +137,9 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 			}
 
 			stack = stack[:i+1]
-			prev = token
-			continue
-		}
-
-		if tok == '(' {
+		case LeftParenthsToken:
 			stack = append([]string{token}, stack...)
-			prev = token
-			continue
-		}
-
-		if tok == ')' {
+		case RightParenthsToken:
 			var i int
 			for i = len(stack) - 1; i >= 0; i-- {
 				elem := stack[i]
@@ -152,10 +165,10 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 					sb.WriteByte(' ')
 				}
 			}
-
-			prev = token
-			continue
+		default:
+			return postfix, ErrInvalidPostfixToken
 		}
+		prev = token
 	}
 
 	for len(stack) != 0 {
