@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"strconv"
 	"strings"
@@ -15,35 +16,86 @@ var (
 // ConvertInfixToPostfix returns the postfix equivalent of the given infix expression.
 func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 	scan := new(scanner.Scanner).Init(strings.NewReader(infix))
-	scan.Mode = scanner.ScanIdents | scanner.ScanInts | scanner.ScanFloats
+	scan.Mode = scanner.ScanIdents | scanner.ScanFloats
+
+	sb := new(bytes.Buffer)
+	defer func() {
+		postfix = strings.TrimSpace(sb.String())
+	}()
 
 	var stack []string
-	var queue []byte
-	defer func() { postfix = strings.TrimSpace(string(queue)) }()
+	var prev string
 
 	for tok := scan.Scan(); tok != scanner.EOF; tok = scan.Scan() {
 		token := scan.TokenText()
 
 		if _, err := strconv.ParseFloat(token, 0); err == nil {
-			queue = append(queue, []byte(token+" ")...)
+			sb.WriteString(token)
+			sb.WriteByte(' ')
+			prev = token
 			continue
 		}
 
 		if _, ok := Operator(token); ok {
 			if len(stack) != 0 {
+				if token == "-" {
+					next := scan.Scan()
+
+					text := scan.TokenText()
+
+					if next == scanner.EOF {
+						return postfix, ErrInvalidStackOrdering
+					}
+
+					if _, err := strconv.ParseFloat(text, 0); err != nil {
+						return postfix, ErrInvalidStackOrdering
+					}
+
+					if isNumber(prev) {
+						sb.WriteString(text)
+						sb.WriteByte(' ')
+						sb.WriteString(token)
+					} else {
+						sb.WriteString(token)
+						sb.WriteString(text)
+					}
+					prev = token
+					tok = next
+					token = text
+
+					sb.WriteByte(' ')
+					continue
+				}
 				o1, o2 := token, stack[len(stack)-1]
 				if (isLeftAssociativeOperator(o1) && precedence(o1) <= precedence(o2)) ||
 					(isRightAssociativeOperator(o1) && precedence(o1) < precedence(o2)) {
 					stack = stack[:len(stack)-1]
-					queue = append(queue, []byte(o2+" ")...)
+					sb.WriteString(o2)
+					sb.WriteByte(' ')
 				}
+			} else if token == "-" {
+				tok = scan.Scan()
+				if tok == scanner.EOF {
+					return postfix, ErrInvalidStackOrdering
+				}
+
+				if _, err := strconv.ParseFloat(scan.TokenText(), 0); err != nil {
+					return postfix, ErrInvalidStackOrdering
+				}
+
+				sb.WriteString(token)
+				sb.WriteString(scan.TokenText())
+				sb.WriteByte(' ')
+				continue
 			}
 
+			prev = token
 			stack = append(stack, token)
 			continue
 		}
 
 		if _, ok := Function(token); ok {
+			prev = token
 			stack = append(stack, token)
 			continue
 		}
@@ -55,7 +107,8 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 				if elem == "(" {
 					break
 				}
-				queue = append(queue, []byte(elem+" ")...)
+				sb.WriteString(elem)
+				sb.WriteByte(' ')
 			}
 
 			if i == -1 {
@@ -63,22 +116,26 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 			}
 
 			stack = stack[:i+1]
+			prev = token
 			continue
 		}
 
-		if token == "(" {
+		if tok == '(' {
 			stack = append([]string{token}, stack...)
+			prev = token
 			continue
 		}
 
-		if token == ")" {
+		if tok == ')' {
 			var i int
 			for i = len(stack) - 1; i >= 0; i-- {
 				elem := stack[i]
 				if elem == "(" {
 					break
 				}
-				queue = append(queue, []byte(elem+" ")...)
+
+				sb.WriteString(elem)
+				sb.WriteByte(' ')
 			}
 
 			if i == -1 {
@@ -91,10 +148,12 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 				elem := stack[len(stack)-1]
 				if _, ok := Function(elem); ok {
 					stack = stack[:len(stack)-1]
-					queue = append(queue, []byte(elem+" ")...)
+					sb.WriteString(elem)
+					sb.WriteByte(' ')
 				}
 			}
 
+			prev = token
 			continue
 		}
 	}
@@ -105,7 +164,8 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 			return postfix, ErrExtraParenths
 		}
 		stack = stack[:len(stack)-1]
-		queue = append(queue, []byte(elem+" ")...)
+		sb.WriteString(elem)
+		sb.WriteByte(' ')
 	}
 
 	return postfix, nil

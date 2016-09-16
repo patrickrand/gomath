@@ -16,7 +16,8 @@ var (
 func (pf *postfix) Calculate(expr string) (float64, error) {
 	var stack []float64
 
-	for _, token := range tokenizePostfixExpression(expr) {
+	tokens := tokenizePostfixExpression(expr)
+	for i, token := range tokens {
 		if len(token) == 0 {
 			continue
 		}
@@ -24,9 +25,18 @@ func (pf *postfix) Calculate(expr string) (float64, error) {
 		top := len(stack)
 
 		if op, ok := Operator(token); ok {
-			if top < 2 {
+			if top <= 1 {
+				if top == 1 && token == "-" && isNumber(tokens[i+1]) {
+					tokens[i+1] = tokens[i] + tokens[i+1]
+					continue
+				}
 				return 0, ErrInvalidStackOrdering
 			}
+
+			// if top == 1 && (token == "+" || token == "-") {
+			// 	stack = append(stack, 0)
+			// 	top++
+			// }
 
 			lhs, rhs := stack[top-2], stack[top-1]
 			stack, top = stack[:top-1], top-1
