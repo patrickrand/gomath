@@ -1,9 +1,6 @@
 package main
 
-import (
-	"errors"
-	"strconv"
-)
+import "errors"
 
 type postfix struct{}
 
@@ -33,11 +30,6 @@ func (pf *postfix) Calculate(expr string) (float64, error) {
 				return 0, ErrInvalidStackOrdering
 			}
 
-			// if top == 1 && (token == "+" || token == "-") {
-			// 	stack = append(stack, 0)
-			// 	top++
-			// }
-
 			lhs, rhs := stack[top-2], stack[top-1]
 			stack, top = stack[:top-1], top-1
 			stack[top-1] = op(lhs, rhs)
@@ -54,7 +46,7 @@ func (pf *postfix) Calculate(expr string) (float64, error) {
 		}
 
 		// attempt to parse float from token and push its value onto stack
-		val, err := strconv.ParseFloat(token, 0)
+		val, err := ParseFloat(token)
 		if err != nil {
 			return 0, ErrInvalidPostfixToken
 		}

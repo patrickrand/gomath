@@ -14,6 +14,7 @@ gomath --postfix '10.25 -8 * 124 +'
 
 ### Features
 - supports both infix and postfix notation
+- no external package dependencies
 
 ### Supported Operations
 - `+`, `-`, `*`, `/`, `pow`, `sqrt`
