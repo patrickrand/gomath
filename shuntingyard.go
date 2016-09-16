@@ -68,60 +68,41 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 
 	for tok := scan.Scan(); tok != scanner.EOF; tok = scan.Scan() {
 		token := scan.TokenText()
+		tokenType := GetTokenType(token)
 
-		switch GetTokenType(token) {
+		switch tokenType {
 		case NumberToken:
 			sb.WriteString(token)
 			sb.WriteByte(' ')
 		case OperatorToken:
-			if len(stack) != 0 {
-				if token == "-" {
-					next := scan.Scan()
+			if token != "-" {
+				stack = append(stack, token)
+				break
+			}
 
-					text := scan.TokenText()
+			if tok = scan.Scan(); tok == scanner.EOF {
+				return postfix, ErrInvalidStackOrdering
+			}
 
-					if next == scanner.EOF {
-						return postfix, ErrInvalidStackOrdering
-					}
+			next := scan.TokenText()
+			if _, err := strconv.ParseFloat(next, 0); err != nil {
+				return postfix, ErrInvalidStackOrdering
+			}
 
-					if _, err := strconv.ParseFloat(text, 0); err != nil {
-						return postfix, ErrInvalidStackOrdering
-					}
-
-					if isNumber(prev) {
-						sb.WriteString(text)
-						sb.WriteByte(' ')
-						sb.WriteString(token)
-					} else {
-						sb.WriteString(token)
-						sb.WriteString(text)
-					}
-					prev = token
-					tok = next
-					token = text
-
-					sb.WriteByte(' ')
-					continue
-				}
-			} else if token == "-" {
-				tok = scan.Scan()
-				if tok == scanner.EOF {
-					return postfix, ErrInvalidStackOrdering
-				}
-
-				if _, err := strconv.ParseFloat(scan.TokenText(), 0); err != nil {
-					return postfix, ErrInvalidStackOrdering
-				}
-
+			if len(stack) == 0 || !isNumber(prev) {
 				sb.WriteString(token)
-				sb.WriteString(scan.TokenText())
+				sb.WriteString(next)
+			} else {
+				sb.WriteString(next)
 				sb.WriteByte(' ')
-				continue
+				sb.WriteString(token)
 			}
+			sb.WriteByte(' ')
+
+			token = next
+		case FunctionToken, LeftParenthsToken:
 			stack = append(stack, token)
-		case FunctionToken:
-			stack = append(stack, token)
-		case CommaToken:
+		case CommaToken, RightParenthsToken:
 			var i int
 			for i = len(stack) - 1; i >= 0; i-- {
 				elem := stack[i]
@@ -136,23 +117,9 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 				return postfix, ErrMissingLeftParenths
 			}
 
-			stack = stack[:i+1]
-		case LeftParenthsToken:
-			stack = append([]string{token}, stack...)
-		case RightParenthsToken:
-			var i int
-			for i = len(stack) - 1; i >= 0; i-- {
-				elem := stack[i]
-				if elem == "(" {
-					break
-				}
-
-				sb.WriteString(elem)
-				sb.WriteByte(' ')
-			}
-
-			if i == -1 {
-				return postfix, ErrMissingLeftParenths
+			if tokenType == CommaToken {
+				stack = stack[:i+1]
+				break
 			}
 
 			stack = stack[:i]
@@ -168,6 +135,7 @@ func ConvertInfixToPostfix(infix string) (postfix string, err error) {
 		default:
 			return postfix, ErrInvalidPostfixToken
 		}
+
 		prev = token
 	}
 
