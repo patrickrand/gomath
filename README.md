@@ -1,4 +1,6 @@
 # mathias
+[![Build Status](https://travis-ci.org/patrickrand/mathias.svg?branch=master)](https://travis-ci.org/patrickrand/mathias)
+
 `mathias` is a Go CLI that attempts to act as a mathematical calculator.
 
 ## Installation and Usage
